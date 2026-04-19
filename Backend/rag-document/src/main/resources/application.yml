@@ -1,0 +1,22 @@
+spring:
+  application:
+   name: rag-document
+  datasource:
+    url: jdbc:mysql://localhost:3306/rag_db?createDatabaseIfNotExist=true
+    username: root
+    password: STS2025@STS
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 9000
+
+# ChromaDB Config
+chroma:
+  base-url: http://localhost:8000
