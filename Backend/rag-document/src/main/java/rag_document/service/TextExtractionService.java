@@ -33,8 +33,6 @@ public class TextExtractionService {
             String text = stripper.getText(document);
             log.info("Extracted {} characters from PDF", text.length());
             return text;
-
-
         }
 
     }
