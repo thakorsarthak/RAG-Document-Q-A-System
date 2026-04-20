@@ -8,8 +8,8 @@ import java.util.List;
 @Service
 public class ChunkingService {
 
-    private static final int MAX_CHUNK_SIZE = 800; //CHARACTERS
-    private static final int OVERLAP_SIZE = 100;
+    private static final int MAX_CHUNK_SIZE = 1000; //CHARACTERS
+    private static final int OVERLAP_SIZE = 200;
 
     public List<String> chunkText(String text){
         List<String> chunks = new ArrayList<>();
@@ -21,25 +21,46 @@ public class ChunkingService {
             return chunks;
         }
 
-        int start =0 ;
-        while(start < text.length()){
-            int end = Math.min(start + MAX_CHUNK_SIZE, text.length());
+        int position = 0;
+        int textLength = text.length();
+        while(position < text.length()){
+            int end = Math.min(position + MAX_CHUNK_SIZE, textLength);
 
             // try to break at sentence boundary like . ! ?
-            if (end < text.length()){
-                int lastPeriod = text.lastIndexOf('.' , end);
-                int lastQuestion = text.lastIndexOf('?' , end);
-                int lastExclamation = text.lastIndexOf('!' , end);
+            if (end < textLength){
+                int searchStart = Math.max(position + 500, end - 200); // Search last 200 chars
+                int lastBreak = -1;
 
-                int breakPoint = Math.max(lastPeriod , Math.max(lastExclamation , lastExclamation));
+                // Look for sentence breaks in a limited range
+                for (int i = end; i >= searchStart; i--) {
+                    char c = text.charAt(i);
+                    if (c == '.' || c == '?' || c == '!') {
+                        lastBreak = i + 1;
+                        break;
+                    }
+                }
 
-                if (breakPoint > start + 200){ // Don't make chunks too small
-                    end = breakPoint + 1;
+                if (lastBreak > position){ // Don't make chunks too small
+                    end = lastBreak;
                 }
             }
 
-            chunks.add(text.substring(start,end).trim());
-            start = end- OVERLAP_SIZE; // overlap for context
+            // Extract chunk directly without creating intermediate strings
+            String chunk = text.substring(position, end).trim();
+
+            if (!chunk.isEmpty()) {
+                chunks.add(chunk);
+            }
+
+
+            // Move forward with overlap
+            position = end - OVERLAP_SIZE;
+
+
+            // Ensure we make progress
+            if (position <= end - MAX_CHUNK_SIZE) {
+                position = end;
+            }
 
         }
 
