@@ -1,5 +1,7 @@
 package rag_document.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,30 +20,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/documents")
 @RequiredArgsConstructor
+@Tag(name = "Document Management", description = "APIs for document upload, retrieval, and RAG-based querying")
 public class DocumentController {
 
     private final DocumentService documentService;
     private  final QueryService queryService;
 
-
-    // get all documents
-    @GetMapping
-    public ResponseEntity<List<Document>> getAllDocuments(){
-
-        List<Document> documents = documentService.getAllDocuments();
-        return ResponseEntity.ok(documents);
-    }
-
-    // get documents with id
-    @GetMapping("/{id}")
-    public ResponseEntity<Document> getDocumentById(@PathVariable Long id){
-
-        return documentService.getDocumentById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
     @PostMapping("/upload")
+    @Operation(summary = "Upload a document", description = "Upload PDF or TXT file for processing and embedding generation")
     public ResponseEntity<Document> uploadDocument(@RequestParam("file")MultipartFile file){
 
         try{
@@ -59,10 +45,39 @@ public class DocumentController {
 
 
     @PostMapping("/query")
+    @Operation(summary = "Query documents", description = "Ask questions about uploaded documents using RAG")
     public ResponseEntity<QueryResponse> query (@Valid @RequestBody QueryRequest request){
 
         QueryResponse queryResponse = queryService.query(request);
         return ResponseEntity.ok(queryResponse);
 
     }
+
+    // get all documents
+    @GetMapping
+    @Operation(summary = "Get all documents", description = "Retrieve list of all uploaded documents")
+    public ResponseEntity<List<Document>> getAllDocuments(){
+
+        List<Document> documents = documentService.getAllDocuments();
+        return ResponseEntity.ok(documents);
+    }
+
+    // get documents with id
+    @GetMapping("/{id}")
+    @Operation(summary = "Get document by ID", description = "Retrieve a specific document's metadata")
+    public ResponseEntity<Document> getDocumentById(@PathVariable Long id){
+        Document document = documentService.getDocumentById(id);
+        return ResponseEntity.ok(document);
+    }
+
+    // delete document form both chromabd and mysql
+    @DeleteMapping("{id}")
+    @Operation(summary = "Delete document", description = "Delete document from database (note: embeddings remain in ChromaDB)")
+    public ResponseEntity<Document> deleteDocument(@PathVariable Long id){
+
+        Document document = documentService.getDocumentById(id);
+        return ResponseEntity.ok(document);
+
+    }
+
 }

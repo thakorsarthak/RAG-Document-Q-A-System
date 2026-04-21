@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import rag_document.entity.ChunkMetadata;
 import rag_document.entity.Document;
+import rag_document.exception.DocumentNotFoundException;
 import rag_document.repository.DocumentRepository;
 
 import javax.print.Doc;
@@ -30,9 +31,25 @@ public class DocumentService {
     }
 
 
-    public Optional<Document> getDocumentById(Long id){
+    public Document getDocumentById(Long id){
+        return documentRepository.findById(id)
+                .orElseThrow(() -> new DocumentNotFoundException(id));
+    }
 
-        return documentRepository.findById(id);
+
+    public boolean deleteDocument(Long id){
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new DocumentNotFoundException(id));
+
+        //delete from vector DB
+        vectorStoreService.deleteDocumentChunks(id);
+
+        //delete from sql bd
+        documentRepository.deleteById(id);
+        log.info("Deleted the document by id: {}" , id);
+
+        return true;
+
     }
     public Document uploadDocument(MultipartFile file) throws IOException{
 

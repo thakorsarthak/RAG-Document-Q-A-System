@@ -6,6 +6,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import rag_document.exception.UnsupportedFileTypeException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -23,7 +24,7 @@ public class TextExtractionService {
         } else if ("text/plain".equals(contentType)) {
             return new String(file.getBytes(), StandardCharsets.UTF_8);
         }else {
-            throw new IllegalArgumentException("Unsupported file type: " + contentType);
+            throw new UnsupportedFileTypeException(contentType);
         }
     }
 
