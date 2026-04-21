@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 
 @Service
@@ -19,8 +20,8 @@ public class TextExtractionService {
         String contentType = file.getContentType();
         if("application/pdf".equals(contentType)){
             return extractFromPdf(file);
-        } else if ("text/plan".equals(contentType)) {
-            return new String(file.getBytes());
+        } else if ("text/plain".equals(contentType)) {
+            return new String(file.getBytes(), StandardCharsets.UTF_8);
         }else {
             throw new IllegalArgumentException("Unsupported file type: " + contentType);
         }

@@ -1,6 +1,7 @@
 package rag_document.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +26,9 @@ public class DocumentController {
         try{
             Document document = documentService.uploadDocument(file);
             return ResponseEntity.ok(document);
+        }
+        catch (IllegalArgumentException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         catch (IOException e ){
 
