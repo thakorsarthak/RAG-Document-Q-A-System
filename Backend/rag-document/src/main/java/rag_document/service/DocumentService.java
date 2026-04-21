@@ -11,6 +11,7 @@ import rag_document.repository.DocumentRepository;
 import javax.print.Doc;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -23,6 +24,16 @@ public class DocumentService {
     private final ChunkingService chunkingService;
     private final VectorStoreService vectorStoreService;
 
+
+    public List<Document> getAllDocuments(){
+        return documentRepository.findAll();
+    }
+
+
+    public Optional<Document> getDocumentById(Long id){
+
+        return documentRepository.findById(id);
+    }
     public Document uploadDocument(MultipartFile file) throws IOException{
 
         log.info("Processing file: {}", file.getOriginalFilename());
@@ -49,7 +60,7 @@ public class DocumentService {
 
         ChunkMetadata metadata = ChunkMetadata.builder()
                 .documentId(document.getId())
-                .fileName(document.getFilename())
+                .filename(document.getFilename())
                 .chunkIndex(0)
                 .totalChunks(chunks.size())
                 .build();

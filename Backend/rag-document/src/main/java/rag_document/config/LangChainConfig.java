@@ -26,7 +26,7 @@ public class LangChainConfig {
         return OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
                 .modelName("llama3.2")
-                .temperature(0.2)
+                .temperature(0.7)
                 .timeout(Duration.ofSeconds(60))
                 .build();
     }

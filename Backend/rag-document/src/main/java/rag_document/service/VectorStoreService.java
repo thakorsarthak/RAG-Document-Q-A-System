@@ -41,8 +41,12 @@ public class VectorStoreService {
         return embeddingStore;
     }
 
+
+
     public void storeChunks(List<String> chunks, ChunkMetadata metadata) {
         log.info("Storing {} chunnks for document {}", chunks.size(), metadata.getDocumentId());
+
+
 
         List<TextSegment> segments = new ArrayList<>();
         List<Embedding> embeddings = new ArrayList<>();
@@ -54,9 +58,13 @@ public class VectorStoreService {
             // create a metadata for this chunk
             Metadata chunkMeta = new Metadata();
             chunkMeta.put("documentId", metadata.getDocumentId());
-            chunkMeta.put("fileName", metadata.getFileName());
-            chunkMeta.put("chunkIndex", metadata.getChunkIndex());
-            chunkMeta.put("totalChunks", metadata.getTotalChunks());
+            chunkMeta.put("filename", metadata.getFilename());
+            chunkMeta.put("chunkIndex", i);
+            chunkMeta.put("totalChunks", chunks.size());
+
+            //debugging
+            log.info("Storing chunk {} with metadata: docId={}, filename={}",
+                    i, metadata.getDocumentId(), metadata.getFilename());
 
 
             //creating text segment

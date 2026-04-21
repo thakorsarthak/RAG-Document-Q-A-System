@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class ChunkMetadata {
 
     private Long documentId;
-    private String fileName;
+    private String filename;
     private Integer chunkIndex;
     private Integer totalChunks;
 }
