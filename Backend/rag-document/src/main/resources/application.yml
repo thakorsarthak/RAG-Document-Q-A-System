@@ -35,3 +35,6 @@ chroma:
     swagger-ui:
       path: /swagger-ui.html
       operations-sorter: method
+
+  lucene:
+    index-path: ./lucene-index
