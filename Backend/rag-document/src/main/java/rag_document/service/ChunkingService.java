@@ -8,65 +8,64 @@ import java.util.List;
 @Service
 public class ChunkingService {
 
-    private static final int MAX_CHUNK_SIZE = 1000; //CHARACTERS
+    private static final int MAX_CHUNK_SIZE = 1000;
     private static final int OVERLAP_SIZE = 200;
+    private static final int MIN_CHUNK_SIZE = 500; // safety
 
-    public List<String> chunkText(String text){
+    public List<String> chunkText(String text) {
         List<String> chunks = new ArrayList<>();
 
-        text = text.replaceAll("\\s+"," ").trim();
+        // Clean text
+        text = text.replaceAll("\\s+", " ").trim();
 
-        if(text.length() <= MAX_CHUNK_SIZE){
-            chunks.add(text);
-            return chunks;
-        }
-
-        int position = 0;
         int textLength = text.length();
-        while(position < text.length()){
+        int position = 0;
+
+        while (position < textLength) {
+
             int end = Math.min(position + MAX_CHUNK_SIZE, textLength);
 
-            // try to break at sentence boundary like . ! ?
-            if (end < textLength){
-                int searchStart = Math.max(position + 500, end - 200); // Search last 200 chars
-                int lastBreak = -1;
+            // Try to adjust to sentence boundary
+            if (end < textLength) {
+                int adjustedEnd = findSentenceEnd(text, position, end);
 
-                // Look for sentence breaks in a limited range
-                for (int i = end; i >= searchStart; i--) {
-                    char c = text.charAt(i);
-                    if (c == '.' || c == '?' || c == '!') {
-                        lastBreak = i + 1;
-                        break;
-                    }
-                }
-
-                if (lastBreak > position){ // Don't make chunks too small
-                    end = lastBreak;
+                // Only adjust if chunk is not too small
+                if (adjustedEnd != -1 && (adjustedEnd - position) >= MIN_CHUNK_SIZE) {
+                    end = adjustedEnd;
                 }
             }
 
-            // Extract chunk directly without creating intermediate strings
             String chunk = text.substring(position, end).trim();
 
             if (!chunk.isEmpty()) {
                 chunks.add(chunk);
             }
 
+            //  Move forward safely
+            int nextPosition = end - OVERLAP_SIZE;
 
-            // Move forward with overlap
-            position = end - OVERLAP_SIZE;
-
-
-            // Ensure we make progress
-            if (position <= end - MAX_CHUNK_SIZE) {
-                position = end;
+            // Ensure progress (no infinite loop)
+            if (nextPosition <= position) {
+                nextPosition = end;
             }
 
+            position = nextPosition;
         }
 
         return chunks;
-
     }
 
+    private int findSentenceEnd(String text, int start, int end) {
 
+        int searchStart = Math.max(start + MIN_CHUNK_SIZE, end - 200);
+
+        for (int i = end - 1; i >= searchStart; i--) {
+            char c = text.charAt(i);
+            if (c == '.' || c == '?' || c == '!') {
+                return i + 1;
+            }
+        }
+
+        return -1;
+    }
 }
