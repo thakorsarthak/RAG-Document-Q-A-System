@@ -46,8 +46,6 @@ public class VectorStoreService {
     public void storeChunks(List<String> chunks, ChunkMetadata metadata) {
         log.info("Storing {} chunnks for document {}", chunks.size(), metadata.getDocumentId());
 
-
-
         List<TextSegment> segments = new ArrayList<>();
         List<Embedding> embeddings = new ArrayList<>();
 
