@@ -101,7 +101,6 @@ public class LuceneSearchService {
         searcher.setSimilarity(new BM25Similarity());
 
         QueryParser parser = new QueryParser("content" , analyzer);
-
         Query query = parser.parse(queryText);
 
         //search
