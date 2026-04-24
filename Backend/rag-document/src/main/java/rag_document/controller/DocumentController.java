@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -11,13 +12,16 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import rag_document.dto.QueryRequest;
 import rag_document.dto.QueryResponse;
+import rag_document.dto.SearchResult;
 import rag_document.entity.Document;
 import rag_document.service.DocumentService;
+import rag_document.service.LuceneSearchService;
 import rag_document.service.QueryService;
 
 import java.io.IOException;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/documents")
 @RequiredArgsConstructor
@@ -26,6 +30,7 @@ public class DocumentController {
 
     private final DocumentService documentService;
     private  final QueryService queryService;
+    private final LuceneSearchService luceneSearchService;
 
    // @PostMapping("/upload")
    @PostMapping(value = "/upload",consumes = MediaType.MULTIPART_FORM_DATA_VALUE )
@@ -43,6 +48,21 @@ public class DocumentController {
 
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @PostMapping ("/search/bm25")
+    @Operation(summary = "BM25 keyword search" , description = "Search documents using BM25 algorithm (key-word based)")
+    public ResponseEntity<List<SearchResult>> searchBM25(@RequestBody QueryRequest request){
+
+       try {
+           List<SearchResult> results = luceneSearchService.search(request.getQuestion() , 5);
+           return ResponseEntity.ok(results);
+       }catch (Exception e)
+       {
+           log.error("BM25 search failed" , e);
+           return ResponseEntity.internalServerError().build();
+       }
+
     }
 
 

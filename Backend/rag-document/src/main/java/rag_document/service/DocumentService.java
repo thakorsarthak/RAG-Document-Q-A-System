@@ -24,33 +24,9 @@ public class DocumentService {
     private final TextExtractionService textExtractionService;
     private final ChunkingService chunkingService;
     private final VectorStoreService vectorStoreService;
+    private final LuceneSearchService luceneSearchService;
 
 
-    public List<Document> getAllDocuments(){
-        return documentRepository.findAll();
-    }
-
-
-    public Document getDocumentById(Long id){
-        return documentRepository.findById(id)
-                .orElseThrow(() -> new DocumentNotFoundException(id));
-    }
-
-
-    public boolean deleteDocument(Long id){
-        Document document = documentRepository.findById(id)
-                .orElseThrow(() -> new DocumentNotFoundException(id));
-
-        //delete from vector DB
-        vectorStoreService.deleteDocumentChunks(id);
-
-        //delete from sql bd
-        documentRepository.deleteById(id);
-        log.info("Deleted the document by id: {}" , id);
-
-        return true;
-
-    }
     public Document uploadDocument(MultipartFile file) throws IOException{
 
         log.info("Processing file: {}", file.getOriginalFilename());
@@ -73,8 +49,8 @@ public class DocumentService {
         document = documentRepository.save(document);
         log.info("Document saved with ID : {}" , document.getId());
 
-        // TODO: Store chunks in ChromaDB
 
+        //  Store chunks in ChromaDB
         ChunkMetadata metadata = ChunkMetadata.builder()
                 .documentId(document.getId())
                 .filename(document.getFilename())
@@ -85,8 +61,53 @@ public class DocumentService {
         vectorStoreService.storeChunks(chunks , metadata);
 
 
+        for(int i=0 ; i<chunks.size(); i++){
+            luceneSearchService.indexChunk(
+                    document.getId(),
+                    document.getFilename(),
+                    i,
+                    chunks.get(i)
+            );
+
+        }
+        log.info("Indexed {} chunked in lecene" , chunks.size());
+
+
         document.setStatus("COMPLETED");
         return documentRepository.save(document);
+
+    }
+
+    public List<Document> getAllDocuments(){
+        return documentRepository.findAll();
+    }
+
+
+    public Document getDocumentById(Long id){
+        return documentRepository.findById(id)
+                .orElseThrow(() -> new DocumentNotFoundException(id));
+    }
+
+
+    public boolean deleteDocument(Long id){
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new DocumentNotFoundException(id));
+
+        try {
+            // Delete from Lucene
+            luceneSearchService.deleteDocument(id);
+        } catch (IOException e) {
+            log.error("Failed to delete from Lucene", e);
+        }
+
+        //delete from vector DB
+        vectorStoreService.deleteDocumentChunks(id);
+
+        //delete from sql bd
+        documentRepository.deleteById(id);
+        log.info("Deleted the document by id: {}" , id);
+
+        return true;
 
     }
 
