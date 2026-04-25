@@ -43,7 +43,6 @@ public class LuceneSearchService {
     @Value("${lucene.index-path}")
     private String indexPath;
 
-
     private Directory directory;
     private IndexWriter indexWriter;
     private StandardAnalyzer analyzer;
