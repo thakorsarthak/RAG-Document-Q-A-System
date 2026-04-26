@@ -33,7 +33,7 @@ public class DocumentController {
     private final LuceneSearchService luceneSearchService;
 
    // @PostMapping("/upload")
-   @PostMapping(value = "/upload",consumes = MediaType.MULTIPART_FORM_DATA_VALUE )
+    @PostMapping(value = "/upload",consumes = MediaType.MULTIPART_FORM_DATA_VALUE )
     @Operation(summary = "Upload a document", description = "Upload PDF or TXT file for processing and embedding generation")
     public ResponseEntity<Document> uploadDocument(@RequestParam("file")MultipartFile file){
 
@@ -73,6 +73,20 @@ public class DocumentController {
         QueryResponse queryResponse = queryService.query(request);
         return ResponseEntity.ok(queryResponse);
 
+    }
+
+
+    @PostMapping("/query/hybrid")
+    @Operation(
+            summary = "Hybrid query (Vector + BM25)",
+            description = "Ask questions using combined semantic and keyword search with RRF merging"
+    )
+    public ResponseEntity<QueryResponse> hybridQuery(
+            @Valid @RequestBody QueryRequest request,
+            @RequestParam(defaultValue = "0.7") double alpha){
+
+        QueryResponse response = queryService.hybridQuery(request ,alpha);
+        return ResponseEntity.ok(response);
     }
 
     // get all documents

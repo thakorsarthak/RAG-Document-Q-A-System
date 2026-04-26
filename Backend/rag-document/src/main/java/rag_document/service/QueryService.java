@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import rag_document.dto.QueryRequest;
 import rag_document.dto.QueryResponse;
+import rag_document.dto.SearchResult;
 
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,7 @@ public class QueryService {
 
     private final VectorStoreService vectorStoreService;
     private final ChatLanguageModel chatLanguageModel;
+    private final HybridSearchService hybridSearchService;
 
     public QueryResponse query(QueryRequest request){
         log.info("Processing query : {}", request.getQuestion());
@@ -73,6 +75,69 @@ public class QueryService {
                 .sources(sources)
                 .build();
     }
+
+
+    /**
+     * NEW: Hybrid query using both vector and BM25 search
+     */
+
+    public QueryResponse hybridQuery(QueryRequest request , double alpha){
+        log.info("Processing hybrid query: {}" , request.getQuestion());
+        try{
+
+            //Step 1: hybrid search with RRF
+            List<SearchResult> matches = hybridSearchService.hybridSearch(
+                    request.getQuestion(),
+                    5 , alpha);
+
+            if(matches.isEmpty()){
+                return QueryResponse.builder()
+                        .answer("I couldn't find any relevant information in the documents to answer your question.")
+                        .sources(List.of())
+                        .build();
+            }
+
+            //Step 2 : Build context from retrieved chunks
+            String context = matches.stream()
+                    .map(SearchResult::getText)
+                    .collect(Collectors.joining("\n\n"));
+
+            //Step 3 : Build prompt for LLM
+            String prompt = buildPrompt(context, request.getQuestion());
+
+            //Step 4 : Get answer from llm
+            String answer = chatLanguageModel.generate(prompt);
+            log.info("Generated answer: {}", answer);
+
+
+            //Step 5: Build response with sources
+            List<QueryResponse.SourceChunk> sources = matches.stream()
+                    .map(match -> QueryResponse.SourceChunk.builder()
+                            .documentId(match.getDocumentId())
+                            .filename(match.getFilename())
+                            .text(match.getText())
+                            .score(match.getScore()) //this is now rrf score
+                            .build())
+                    .collect(Collectors.toList());
+
+            return  QueryResponse.builder()
+                    .answer(answer)
+                    .sources(sources)
+                    .build();
+
+
+        }catch (Exception e)
+        {
+            log.error("Hybrid query failed", e);
+            return QueryResponse.builder()
+                    .answer("An error occurred while processing your query.")
+                    .sources(List.of())
+                    .build();
+        }
+
+    }
+
+
 
     private String buildPrompt(String context , String question){
 
