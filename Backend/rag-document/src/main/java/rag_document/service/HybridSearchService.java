@@ -73,7 +73,6 @@ public class HybridSearchService {
 
     /**
      * Merge two ranked lists using Reciprocal Rank Fusion (RRF)
-     *
      * @param vectorResults Results from vector search
      * @param bm25Results Results from BM25 search
      * @param alpha Weight for vector vs BM25 (0.0 = only BM25 , 1.0 = only vector)
@@ -121,7 +120,6 @@ public class HybridSearchService {
                 })
                 .collect(Collectors.toList());
     }
-
     /**
      * Create unique key for a search result (documentId + chunkIndex)
      */

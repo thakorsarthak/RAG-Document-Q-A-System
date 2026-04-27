@@ -41,8 +41,6 @@ public class VectorStoreService {
         return embeddingStore;
     }
 
-
-
     public void storeChunks(List<String> chunks, ChunkMetadata metadata) {
         log.info("Storing {} chunks for document {}", chunks.size(), metadata.getDocumentId());
 
