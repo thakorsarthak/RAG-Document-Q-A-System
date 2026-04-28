@@ -120,6 +120,7 @@ public class HybridSearchService {
                 })
                 .collect(Collectors.toList());
     }
+    
     /**
      * Create unique key for a search result (documentId + chunkIndex)
      */
