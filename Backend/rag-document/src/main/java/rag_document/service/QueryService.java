@@ -41,7 +41,7 @@ public class QueryService {
         // step 2 - build context from retrieved chunks
         String context = matches.stream()
                 .map(match -> match.embedded().text())
-                .collect(Collectors.joining("\n\n"));
+                .collect(Collectors.joining("\n \n"));
 
 
         //step 3 - build prompt for llm

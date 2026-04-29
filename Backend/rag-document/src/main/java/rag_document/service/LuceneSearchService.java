@@ -31,9 +31,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**             what this service does:
- * Indexing: Store document chunks in Lucene's inverted index
- * Searching: Run BM25 keyword search
- * Deletion: Remove chunks when document is deleted  **/
+     * Indexing: Store document chunks in Lucene's inverted index
+     * Searching: Run BM25 keyword search
+     * Deletion: Remove chunks when document is deleted  **/
 
 
 @Service
@@ -77,7 +77,7 @@ public class LuceneSearchService {
 
         Document doc = new Document();
 
-        //store metadata
+        //storing metadata
         doc.add(new StringField("documentId" , documentId.toString() , Field.Store.YES));
         doc.add(new StringField("filename" , filename , Field.Store.YES));
         doc.add(new StringField("chunkIndex" , String.valueOf(chunkIndex) , Field.Store.YES));
@@ -99,6 +99,8 @@ public class LuceneSearchService {
         //using BM25 similarity
         searcher.setSimilarity(new BM25Similarity());
 
+
+        //Here content is name of our field which have whole content
         QueryParser parser = new QueryParser("content" , analyzer);
         Query query = parser.parse(queryText);
 

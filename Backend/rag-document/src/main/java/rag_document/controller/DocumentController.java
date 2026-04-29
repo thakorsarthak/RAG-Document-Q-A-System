@@ -79,7 +79,8 @@ public class DocumentController {
     @PostMapping("/query/hybrid")
     @Operation(
             summary = "Hybrid query (Vector + BM25)",
-            description = "Ask questions using combined semantic and keyword search with RRF merging"
+            description = "Combines semantic (vector) and keyword (BM25) search using RRF. " +
+                    "Alpha parameter: 0.0 = only vector, 1.0 = only BM25, 0.7 = favor BM25 (recommended)"
     )
     public ResponseEntity<QueryResponse> hybridQuery(
             @Valid @RequestBody QueryRequest request,
@@ -106,7 +107,7 @@ public class DocumentController {
         return ResponseEntity.ok(document);
     }
 
-    // delete document form both chromabd and mysql
+    // delete document form both chromaDB and mysql
     @DeleteMapping("{id}")
     @Operation(summary = "Delete document", description = "Delete document from database (note: embeddings remain in ChromaDB)")
     public ResponseEntity<Document> deleteDocument(@PathVariable Long id){

@@ -41,14 +41,21 @@ public class HybridSearchService {
         //Step 3 : converting vector result into search result format
         List<SearchResult> vectorSearchResult = convertVectorResults(vectorResults);
 
-        //Step 4 : Merging result
+        //Step 4 : Merging result rrf
         List<SearchResult> mergedResults = mergeWithRRF(vectorSearchResult , bm25Results , alpha);
 
         log.info("Hybrid search returned {} merged results" , mergedResults.size());
 
-        return mergedResults.stream()
-                .limit(maxResults)
+        double maxScore = mergedResults.isEmpty() ? 0 : mergedResults.get(0).getScore();
+        double threshold = maxScore * 0.3; // Keep only results within 30% of top score
+
+       return mergedResults = mergedResults.stream()
+                .filter(r -> r.getScore() >= threshold).limit(maxResults)
                 .collect(Collectors.toList());
+
+//        return mergedResults.stream()
+//                .limit(maxResults)
+//                .collect(Collectors.toList());
     }
 
 
@@ -90,7 +97,7 @@ public class HybridSearchService {
             SearchResult result = vectorResults.get(i);
             String key = getResultKey(result);
 
-            double rrfScore = alpha * (1.0/(k + i +1));
+            double rrfScore =(1.0 - alpha)* (1.0/(k + i +1));
 
             rrfScores.put(key, rrfScore);
             resultMap.put(key, result);
@@ -101,10 +108,10 @@ public class HybridSearchService {
             SearchResult result  = bm25Results.get(i);
             String key = getResultKey(result);
 
-            double rrfScore = (1.0 - alpha)*(1.0/(k+1+i));
+            double rrfScore =  alpha *(1.0/(k+1+i));
 
             //Add to existing score or create new entry
-            rrfScores.merge(key, rrfScore , Double:: sum);
+            rrfScores.merge(key, rrfScore , Double::sum);
             resultMap.putIfAbsent(key , result);
         }
 

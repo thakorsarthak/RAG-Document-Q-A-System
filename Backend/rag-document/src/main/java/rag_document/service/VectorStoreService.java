@@ -103,7 +103,7 @@ public class VectorStoreService {
     public void deleteDocumentChunks(Long documentId) {
         // ChromaDB doesn't have direct delete by metadata in LangChain4j
         // This is a limitation - for now we'll skip deletion
-        // In production, you'd use ChromaDB's native client
+        // In production, i will use ChromaDB's native client
         log.warn("ChromaDB deletion not implemented - chunks for document {} remain in vector store", documentId);
     }
 
