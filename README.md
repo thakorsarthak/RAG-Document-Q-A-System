@@ -306,7 +306,7 @@ Covers:
 
 ## 👤 Author
 
-**Sarthak Thakore**
+**Sarthak Thakor**
 
 * GitHub: https://github.com/thakorsarthak
 * LinkedIn: https://www.linkedin.com/in/sarthak-thakor-29s/
