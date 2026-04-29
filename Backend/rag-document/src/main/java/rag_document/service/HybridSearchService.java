@@ -74,7 +74,7 @@ public class HybridSearchService {
                             .text(segment.text())
                             .score(match.score())
                             .build();
-                })
+                })  
                 .collect(Collectors.toList());
     }
 
