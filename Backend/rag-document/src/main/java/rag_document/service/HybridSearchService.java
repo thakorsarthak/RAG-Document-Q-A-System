@@ -25,38 +25,86 @@ public class HybridSearchService {
 
     /** Performs hybrid search combining vector and BM25 results using RRF **/
 
-    public List<SearchResult> hybridSearch(String query , int maxResults , double alpha) throws Exception{
+    public List<SearchResult> hybridSearch(String query, int maxResults, double alpha) throws Exception {
+        log.info("Hybrid search for: '{}' with alpha={}", query, alpha);
 
-        log.info("Hybrid search for: '{}' with aplha= {}" , query , alpha);
+        // Step 1: Get vector search results
+        List<EmbeddingMatch<TextSegment>> vectorResults = vectorStoreService.searchSimilar(query, maxResults);
+        log.info("Vector search returned {} results", vectorResults.size());
 
-        //step 1 : Get vector results
-        List<EmbeddingMatch<TextSegment>> vectorResults = vectorStoreService.searchSimilar(query , maxResults);
-        log.info("Vector search returned {} results",vectorResults.size());
-
-
-        //Step 2 : Get bm25 results
-        List<SearchResult> bm25Results = luceneSearchService.search(query ,maxResults);
+        // Step 2: Get BM25 search results
+        List<SearchResult> bm25Results = luceneSearchService.search(query, maxResults);
         log.info("BM25 search returned {} results", bm25Results.size());
 
-        //Step 3 : converting vector result into search result format
-        List<SearchResult> vectorSearchResult = convertVectorResults(vectorResults);
+        // Step 3: Convert vector results to SearchResult format
+        List<SearchResult> vectorSearchResults = convertVectorResults(vectorResults);
 
-        //Step 4 : Merging result rrf
-        List<SearchResult> mergedResults = mergeWithRRF(vectorSearchResult , bm25Results , alpha);
+        // NEW: Filter out low-quality results BEFORE merging
+        vectorSearchResults = filterByScore(vectorSearchResults, 0.75); // Keep only >0.75 similarity
+        bm25Results = filterByScore(bm25Results, 1.0); // Keep only >1.0 BM25 score
 
-        log.info("Hybrid search returned {} merged results" , mergedResults.size());
+        log.info("After filtering: {} vector results, {} BM25 results",
+                vectorSearchResults.size(), bm25Results.size());
 
-        double maxScore = mergedResults.isEmpty() ? 0 : mergedResults.get(0).getScore();
-        double threshold = maxScore * 0.3; // Keep only results within 30% of top score
+        // Step 4: Merge using RRF
+        List<SearchResult> mergedResults = mergeWithRRF(vectorSearchResults, bm25Results, alpha);
 
-       return mergedResults = mergedResults.stream()
-                .filter(r -> r.getScore() >= threshold).limit(maxResults)
+        // Step 5: Apply threshold on merged results
+        if (!mergedResults.isEmpty()) {
+            double maxScore = mergedResults.get(0).getScore();
+            double threshold = maxScore * 0.5; // Keep only top 50%
+
+            mergedResults = mergedResults.stream()
+                    .filter(r -> r.getScore() >= threshold)
+                    .collect(Collectors.toList());
+        }
+
+        log.info("Hybrid search returned {} merged results", mergedResults.size());
+        return mergedResults.stream()
+                .limit(maxResults)
                 .collect(Collectors.toList());
-
-//        return mergedResults.stream()
-//                .limit(maxResults)
-//                .collect(Collectors.toList());
     }
+
+
+//    public List<SearchResult> hybridSearch(String query , int maxResults , double alpha) throws Exception{
+//
+//        log.info("Hybrid search for: '{}' with aplha= {}" , query , alpha);
+//
+//        //step 1 : Get vector results
+//        List<EmbeddingMatch<TextSegment>> vectorResults = vectorStoreService.searchSimilar(query , maxResults);
+//        log.info("Vector search returned {} results",vectorResults.size());
+//
+//
+//        //Step 2 : Get bm25 results
+//        List<SearchResult> bm25Results = luceneSearchService.search(query ,maxResults);
+//        log.info("BM25 search returned {} results", bm25Results.size());
+//
+//        //Step 3 : converting vector result into search result format
+//        List<SearchResult> vectorSearchResults = convertVectorResults(vectorResults);
+//
+//
+//        // NEW: Filter out low-quality results BEFORE merging
+//        vectorSearchResults = filterByScore(vectorSearchResults, 0.75); // Keep only >0.75 similarity
+//        bm25Results = filterByScore(bm25Results, 1.0); // Keep only >1.0 BM25 score
+//
+//        log.info("After filtering: {} vector results, {} BM25 results",
+//                vectorSearchResults.size(), bm25Results.size());
+//
+//
+//        //Step 4 : Merging result rrf
+//        List<SearchResult> mergedResults = mergeWithRRF(vectorSearchResults , bm25Results , alpha);
+//
+//        log.info("Hybrid search returned {} merged results" , mergedResults.size());
+//
+//        double maxScore = mergedResults.isEmpty() ? 0 : mergedResults.get(0).getScore();
+//        double threshold = maxScore * 0.3; // Keep only results within 30% of top score
+//
+//        mergedResults = mergedResults.stream()
+//                .filter(r -> r.getScore() >= threshold).limit(maxResults)
+//                .collect(Collectors.toList());
+//
+//       return mergedResults;
+//    }
 
 
     // converter for vector result
@@ -74,7 +122,7 @@ public class HybridSearchService {
                             .text(segment.text())
                             .score(match.score())
                             .build();
-                })  
+                })
                 .collect(Collectors.toList());
     }
 
@@ -133,6 +181,16 @@ public class HybridSearchService {
      */
     private String getResultKey(SearchResult result) {
         return result.getDocumentId() + "_" + result.getChunkIndex();
+    }
+
+
+    /**
+     * Filter results by minimum score threshold
+     */
+    private List<SearchResult> filterByScore(List<SearchResult> results, double minScore) {
+        return results.stream()
+                .filter(r -> r.getScore() >= minScore)
+                .collect(Collectors.toList());
     }
 
 }
