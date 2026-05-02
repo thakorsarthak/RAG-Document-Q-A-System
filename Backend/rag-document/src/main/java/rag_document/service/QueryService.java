@@ -150,7 +150,6 @@ public class QueryService {
                 Question: %s
                 Answer based on the context:""" , context , question);
 
-
     }
 
 

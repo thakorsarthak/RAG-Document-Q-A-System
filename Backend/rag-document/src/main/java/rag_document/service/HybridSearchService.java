@@ -104,6 +104,10 @@ public class HybridSearchService {
 //                .collect(Collectors.toList());
 //
 //       return mergedResults;
+
+                //  return mergedResults.stream()
+                //  .limit(maxResults)
+               // .collect(Collectors.toList());
 //    }
 
 
@@ -180,6 +184,7 @@ public class HybridSearchService {
      * Create unique key for a search result (documentId + chunkIndex)
      */
     private String getResultKey(SearchResult result) {
+
         return result.getDocumentId() + "_" + result.getChunkIndex();
     }
 
