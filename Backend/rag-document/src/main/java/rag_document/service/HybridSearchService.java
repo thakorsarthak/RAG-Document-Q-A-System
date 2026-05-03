@@ -41,7 +41,7 @@ public class HybridSearchService {
 
         // NEW: Filter out low-quality results BEFORE merging
         vectorSearchResults = filterByScore(vectorSearchResults, 0.75); // Keep only >0.75 similarity
-        bm25Results = filterByScore(bm25Results, 1.0); // Keep only >1.0 BM25 score
+        bm25Results = filterByScore(bm25Results, 0.5); // Keep only >0.5 BM25 score
 
         log.info("After filtering: {} vector results, {} BM25 results",
                 vectorSearchResults.size(), bm25Results.size());
@@ -50,14 +50,14 @@ public class HybridSearchService {
         List<SearchResult> mergedResults = mergeWithRRF(vectorSearchResults, bm25Results, alpha);
 
         // Step 5: Apply threshold on merged results
-        if (!mergedResults.isEmpty()) {
-            double maxScore = mergedResults.get(0).getScore();
-            double threshold = maxScore * 0.5; // Keep only top 50%
-
-            mergedResults = mergedResults.stream()
-                    .filter(r -> r.getScore() >= threshold)
-                    .collect(Collectors.toList());
-        }
+//        if (!mergedResults.isEmpty()) {
+//            double maxScore = mergedResults.get(0).getScore();
+//            double threshold = maxScore * 0.5; // Keep only top 50%
+//
+//            mergedResults = mergedResults.stream()
+//                    .filter(r -> r.getScore() >= threshold)
+//                    .collect(Collectors.toList());
+//        }
 
         log.info("Hybrid search returned {} merged results", mergedResults.size());
         return mergedResults.stream()
@@ -144,12 +144,23 @@ public class HybridSearchService {
         Map<String , SearchResult>  resultMap = new HashMap<>();
         Map<String , Double> rrfScores = new HashMap<>();
 
+
+       /**
+            Vector loop = initialize
+            BM25 loop  = update or insert
+        */
+
         //process vector results
         for (int i =0 ; i < vectorResults.size() ; i++){
             SearchResult result = vectorResults.get(i);
             String key = getResultKey(result);
 
             double rrfScore =(1.0 - alpha)* (1.0/(k + i +1));
+
+            /**
+              we are not adding here cause result is initialize from
+              here so there will NO result for particular ResultKey
+             */
 
             rrfScores.put(key, rrfScore);
             resultMap.put(key, result);
@@ -162,7 +173,11 @@ public class HybridSearchService {
 
             double rrfScore =  alpha *(1.0/(k+1+i));
 
-            //Add to existing score or create new entry
+           /**
+            Add to existing score or create new entry
+            Here we are adding cause vector might have result for same
+            ResultKey so bm25 score will be added to vector RRf Score
+            */
             rrfScores.merge(key, rrfScore , Double::sum);
             resultMap.putIfAbsent(key , result);
         }
