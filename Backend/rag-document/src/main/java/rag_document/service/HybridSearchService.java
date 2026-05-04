@@ -49,68 +49,21 @@ public class HybridSearchService {
         // Step 4: Merge using RRF
         List<SearchResult> mergedResults = mergeWithRRF(vectorSearchResults, bm25Results, alpha);
 
-        // Step 5: Apply threshold on merged results
-//        if (!mergedResults.isEmpty()) {
-//            double maxScore = mergedResults.get(0).getScore();
-//            double threshold = maxScore * 0.5; // Keep only top 50%
-//
-//            mergedResults = mergedResults.stream()
-//                    .filter(r -> r.getScore() >= threshold)
-//                    .collect(Collectors.toList());
-//        }
+        // Step 5: Absolute minimum RRF score threshold
+        double MIN_RRF_SCORE = 0.01;  // Anything below this is noise
+
+        mergedResults = mergedResults.stream()
+                .filter(r -> r.getScore() >= MIN_RRF_SCORE)
+                .collect(Collectors.toList());
+
+        log.info("After RRF threshold (min {}): {} results remain", MIN_RRF_SCORE, mergedResults.size());
 
         log.info("Hybrid search returned {} merged results", mergedResults.size());
         return mergedResults.stream()
                 .limit(maxResults)
                 .collect(Collectors.toList());
     }
-
-
-//    public List<SearchResult> hybridSearch(String query , int maxResults , double alpha) throws Exception{
-//
-//        log.info("Hybrid search for: '{}' with aplha= {}" , query , alpha);
-//
-//        //step 1 : Get vector results
-//        List<EmbeddingMatch<TextSegment>> vectorResults = vectorStoreService.searchSimilar(query , maxResults);
-//        log.info("Vector search returned {} results",vectorResults.size());
-//
-//
-//        //Step 2 : Get bm25 results
-//        List<SearchResult> bm25Results = luceneSearchService.search(query ,maxResults);
-//        log.info("BM25 search returned {} results", bm25Results.size());
-//
-//        //Step 3 : converting vector result into search result format
-//        List<SearchResult> vectorSearchResults = convertVectorResults(vectorResults);
-//
-//
-//        // NEW: Filter out low-quality results BEFORE merging
-//        vectorSearchResults = filterByScore(vectorSearchResults, 0.75); // Keep only >0.75 similarity
-//        bm25Results = filterByScore(bm25Results, 1.0); // Keep only >1.0 BM25 score
-//
-//        log.info("After filtering: {} vector results, {} BM25 results",
-//                vectorSearchResults.size(), bm25Results.size());
-//
-//
-//        //Step 4 : Merging result rrf
-//        List<SearchResult> mergedResults = mergeWithRRF(vectorSearchResults , bm25Results , alpha);
-//
-//        log.info("Hybrid search returned {} merged results" , mergedResults.size());
-//
-//        double maxScore = mergedResults.isEmpty() ? 0 : mergedResults.get(0).getScore();
-//        double threshold = maxScore * 0.3; // Keep only results within 30% of top score
-//
-//        mergedResults = mergedResults.stream()
-//                .filter(r -> r.getScore() >= threshold).limit(maxResults)
-//                .collect(Collectors.toList());
-//
-//       return mergedResults;
-
-                //  return mergedResults.stream()
-                //  .limit(maxResults)
-               // .collect(Collectors.toList());
-//    }
-
-
+    
     // converter for vector result
     private List<SearchResult> convertVectorResults(List<EmbeddingMatch<TextSegment>> matches){
 
