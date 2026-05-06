@@ -63,7 +63,7 @@ public class HybridSearchService {
                 .limit(maxResults)
                 .collect(Collectors.toList());
     }
-    
+
     // converter for vector result
     private List<SearchResult> convertVectorResults(List<EmbeddingMatch<TextSegment>> matches){
 
