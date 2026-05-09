@@ -97,7 +97,6 @@ public class HybridSearchService {
         Map<String , SearchResult>  resultMap = new HashMap<>();
         Map<String , Double> rrfScores = new HashMap<>();
 
-
        /**
             Vector loop = initialize
             BM25 loop  = update or insert
@@ -132,11 +131,17 @@ public class HybridSearchService {
             ResultKey so bm25 score will be added to vector RRf Score
             */
             rrfScores.merge(key, rrfScore , Double::sum);
+
             resultMap.putIfAbsent(key , result);
         }
 
 
         //Sort by RRF score descending
+
+        /**
+         * Here we Used comparingByValue() which Sort map entries by their Double values from Lowest to highest
+         * so need to flip sorting , forthat we used reversed()
+         * */
         return rrfScores.entrySet().stream()
                 .sorted(Map.Entry.<String , Double>comparingByValue().reversed())
                 .map(entry -> {
