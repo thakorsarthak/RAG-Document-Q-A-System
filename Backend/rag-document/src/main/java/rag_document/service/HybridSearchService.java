@@ -140,7 +140,7 @@ public class HybridSearchService {
 
         /**
          * Here we Used comparingByValue() which Sort map entries by their Double values from Lowest to highest
-         * so need to flip sorting , forthat we used reversed()
+         * so need to flip sorting , for that we used reversed()
          * */
         return rrfScores.entrySet().stream()
                 .sorted(Map.Entry.<String , Double>comparingByValue().reversed())
