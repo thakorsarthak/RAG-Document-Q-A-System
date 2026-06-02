@@ -20,6 +20,8 @@ public class HybridSearchService {
 
     private final VectorStoreService vectorStoreService;
     private final LuceneSearchService luceneSearchService;
+    private final QueryExpansionService queryExpansionService;
+    private final RerankerService rerankerService;
 
     private static final int k = 60; // RRF constant
 
@@ -28,12 +30,16 @@ public class HybridSearchService {
     public List<SearchResult> hybridSearch(String query, int maxResults, double alpha) throws Exception {
         log.info("Hybrid search for: '{}' with alpha={}", query, alpha);
 
+        //Expanding query before searching
+        String hydeQuery = queryExpansionService.expandWithHyDE(query);
+        String expandedQuery = queryExpansionService.expandWithSynonyms(query);
+
         // Step 1: Get vector search results
-        List<EmbeddingMatch<TextSegment>> vectorResults = vectorStoreService.searchSimilar(query, maxResults);
+        List<EmbeddingMatch<TextSegment>> vectorResults = vectorStoreService.searchSimilar(hydeQuery, maxResults);
         log.info("Vector search returned {} results", vectorResults.size());
 
         // Step 2: Get BM25 search results
-        List<SearchResult> bm25Results = luceneSearchService.search(query, maxResults);
+        List<SearchResult> bm25Results = luceneSearchService.search(expandedQuery, maxResults);
         log.info("BM25 search returned {} results", bm25Results.size());
 
         // Step 3: Convert vector results to SearchResult format
@@ -57,6 +63,21 @@ public class HybridSearchService {
                 .collect(Collectors.toList());
 
         log.info("After RRF threshold (min {}): {} results remain", MIN_RRF_SCORE, mergedResults.size());
+
+
+//        // Step 6: NEW - Cross-Encoder reranking on top candidate only
+//        if(!mergedResults.isEmpty()){
+//            //only reranking top 10 result (expensive operation — don't rerank all results)
+//
+//            List<SearchResult> topCandidates = mergedResults.stream()
+//                    .limit(10)
+//                    .collect(Collectors.toList());
+//
+//            mergedResults = rerankerService.rerank(query,topCandidates);
+//            log.info("After reranking: top score = {}", mergedResults.get(0).getScore());
+//
+//        }
+
 
         log.info("Hybrid search returned {} merged results", mergedResults.size());
         return mergedResults.stream()

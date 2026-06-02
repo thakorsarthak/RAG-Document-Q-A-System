@@ -52,7 +52,7 @@ public class QueryExpansionService {
     /**
      * Term expansion: Add synonyms/related terms to the original query.
      * Used for BM25 to catch variations of the same concept.
-     *
+     * 
      * Why: BM25 is exact keyword matching. "car" won't match "vehicle".
      * Expanding terms catches more relevant documents.
      */
