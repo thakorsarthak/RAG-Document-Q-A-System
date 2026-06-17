@@ -296,7 +296,6 @@ Covers:
 ## 🚧 Future Enhancements
 
 * [ ] DOCX, PPTX, CSV support
-* [ ] Hybrid search (BM25 + vector)
 * [ ] Query history
 * [ ] Multi-language support
 * [ ] Conversation memory
@@ -313,10 +312,3 @@ Covers:
 * Email: thakorsarthak618@gmail.com
 
 ---
-
-## 🙏 Acknowledgments
-
-* LangChain4j
-* Ollama
-* ChromaDB
-* Apache PDFBox
